@@ -25,7 +25,11 @@ export default function AuthPage({ onAuth }) {
       localStorage.setItem('auth_user', JSON.stringify({ email: data.email, name: data.name }));
       onAuth({ email: data.email, name: data.name });
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
+      if (!err.response) {
+        setError('Cannot reach the server. Make sure the backend is running on port 3001.');
+      } else {
+        setError(err.response.data?.error || `Server error ${err.response.status}. Please try again.`);
+      }
     } finally {
       setBusy(false);
     }
