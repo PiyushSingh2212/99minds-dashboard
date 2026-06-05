@@ -1,24 +1,12 @@
-const router   = require('express').Router();
-const archiver = require('archiver');
-const path     = require('path');
-const fs       = require('fs');
+const router = require('express').Router();
+const path   = require('path');
+const fs     = require('fs');
 
 const EXT_DIR = path.resolve(__dirname, '../../../chrome-extension');
 
-// GET /api/extension/download — streams the extension as a zip
-router.get('/download', (req, res) => {
-  if (!fs.existsSync(EXT_DIR)) {
-    return res.status(404).json({ error: 'Extension source not found on server.' });
-  }
-
-  res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="leadvault-lead-extractor.zip"');
-
-  const archive = archiver('zip', { zlib: { level: 9 } });
-  archive.on('error', (err) => { throw err; });
-  archive.pipe(res);
-  archive.directory(EXT_DIR, 'leadvault-lead-extractor');
-  archive.finalize();
+// GET /api/extension/download — redirect to the pre-built static zip
+router.get('/download', (_req, res) => {
+  res.redirect('/leadvault-lead-extractor.zip');
 });
 
 // GET /api/extension/info — version & metadata
@@ -31,7 +19,7 @@ router.get('/info', (req, res) => {
       name:        manifest.name,
       version:     manifest.version,
       description: manifest.description,
-      downloadUrl: '/api/extension/download',
+      downloadUrl: '/leadvault-lead-extractor.zip',
     });
   } catch {
     res.status(404).json({ error: 'Extension manifest not found.' });

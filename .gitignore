@@ -5,3 +5,4 @@ dist/
 .DS_Store
 *.log
 .vercel
+frontend/public/leadvault-lead-extractor.zip

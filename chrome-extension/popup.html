@@ -26,35 +26,34 @@
       overflow: hidden;
       flex-shrink: 0;
     }
-    .header-logo img {
-      width: 100%; height: 100%; object-fit: cover;
-    }
+    .header-logo img { width: 100%; height: 100%; object-fit: cover; }
     .header-text h1 { font-size: 14px; font-weight: 700; color: #fff; }
-    .header-text p  { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 1px; }
+    .header-text p  { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
 
     .body { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
 
     .status-bar {
       display: flex; align-items: center; gap: 8px;
-      padding: 9px 12px;
-      border-radius: 8px;
+      padding: 9px 12px; border-radius: 8px;
       font-size: 12px; font-weight: 500;
     }
     .status-bar.connected    { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
     .status-bar.disconnected { background: #FFF7ED; color: #D97706; border: 1px solid #FDE68A; }
     .status-bar.error        { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
     .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot.green  { background: #16A34A; }
-    .dot.amber  { background: #D97706; }
-    .dot.red    { background: #DC2626; }
+    .dot.green { background: #16A34A; }
+    .dot.amber { background: #D97706; }
+    .dot.red   { background: #DC2626; }
 
-    label { font-size: 11px; font-weight: 600; color: #6B7280; display: block; margin-bottom: 4px; letter-spacing: .03em; text-transform: uppercase; }
+    label {
+      font-size: 11px; font-weight: 600; color: #6B7280; display: block;
+      margin-bottom: 4px; letter-spacing: .03em; text-transform: uppercase;
+    }
     input {
       width: 100%; padding: 8px 10px;
       border: 1px solid #E5E7EB; border-radius: 7px;
       font-size: 13px; color: #1a1a2e;
-      outline: none; transition: border-color .15s;
-      font-family: inherit;
+      outline: none; transition: border-color .15s; font-family: inherit;
     }
     input:focus { border-color: #6B5ECD; box-shadow: 0 0 0 3px rgba(107,94,205,.1); }
 
@@ -64,27 +63,25 @@
       font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all .15s;
       display: flex; align-items: center; justify-content: center; gap: 7px;
+      font-family: inherit;
     }
-    .btn-primary  { background: #6B5ECD; color: #fff; }
-    .btn-primary:hover:not(:disabled)  { background: #5a4db8; }
-    .btn-outline  { background: #fff; color: #6B5ECD; border: 1px solid #D1C8F5; }
+    .btn-primary { background: #6B5ECD; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #5a4db8; }
+    .btn-outline { background: #fff; color: #6B5ECD; border: 1px solid #D1C8F5; }
     .btn-outline:hover { background: #F5F3FF; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .divider { height: 1px; background: #F3F4F6; }
 
     .result {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      display: none;
+      padding: 10px 12px; border-radius: 8px;
+      font-size: 12px; display: none;
     }
     .result.success { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; display: block; }
     .result.error   { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; display: block; }
 
     .page-hint {
-      font-size: 11px; color: #9CA3AF; text-align: center; line-height: 1.5;
-      padding: 6px 0;
+      font-size: 11px; color: #9CA3AF; text-align: center; line-height: 1.5; padding: 4px 0;
     }
 
     .footer {
@@ -101,18 +98,16 @@
     <div class="header-logo"><img src="logo-icon.png" alt="Leadvault" /></div>
     <div class="header-text">
       <h1>Leadvault</h1>
-      <p>Sync LinkedIn leads to dashboard</p>
+      <p>LinkedIn &amp; Sales Navigator sync</p>
     </div>
   </div>
 
   <div class="body">
-    <!-- Connection status -->
     <div id="statusBar" class="status-bar disconnected">
       <span class="dot amber" id="statusDot"></span>
       <span id="statusText">Not connected — save settings first</span>
     </div>
 
-    <!-- Settings -->
     <div>
       <label>Dashboard URL</label>
       <input id="dashUrl" type="url" placeholder="http://localhost:3001/api" />
@@ -121,20 +116,19 @@
       <label>API Key</label>
       <input id="apiKey" type="password" placeholder="leadvault-2026" />
     </div>
-    <button class="btn btn-outline" id="saveBtn">Save & Test Connection</button>
+    <button class="btn btn-outline" id="saveBtn">Save &amp; Test Connection</button>
 
     <div class="divider"></div>
 
-    <!-- Extract action -->
     <button class="btn btn-primary" id="extractBtn" disabled>
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 3a3 3 0 100 6A3 3 0 008 5zm0 1.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2v8M5 7l3 3 3-3M2 13h12" />
       </svg>
       Extract Leads from This Page
     </button>
 
     <div id="pageHint" class="page-hint" style="display:none">
-      Navigate to a LinkedIn People search page to extract leads.
+      Navigate to a <strong>LinkedIn People search</strong> or <strong>Sales Navigator</strong> search page to extract leads.
     </div>
 
     <div id="result" class="result"></div>
@@ -142,7 +136,7 @@
 
   <div class="footer">
     <a id="dashLink" href="#" target="_blank">Open Dashboard ↗</a>
-    <span class="version">v1.0.0</span>
+    <span class="version">v2.0.0</span>
   </div>
 
   <script src="popup.js"></script>

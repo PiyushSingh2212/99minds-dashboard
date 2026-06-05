@@ -1,5 +1,5 @@
 {
-  "name": "99minds-dashboard-backend",
+  "name": "leadvault-backend",
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {

@@ -14,14 +14,12 @@ export default function ExtensionTab() {
   }, []);
 
   const handleDownload = () => {
-    const token = localStorage.getItem('auth_token');
-    const url   = token
-      ? `${BASE}/extension/download?token=${token}`
-      : `${BASE}/extension/download`;
     const a = document.createElement('a');
-    a.href     = url;
+    a.href     = '/leadvault-lead-extractor.zip';
     a.download = 'leadvault-lead-extractor.zip';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   return (
@@ -156,14 +154,14 @@ const STEPS = [
   { title: 'Open Chrome Extensions', body: 'Go to <code style="font-size:11px;background:#F3F4F6;padding:1px 5px;border-radius:4px">chrome://extensions</code> and enable <strong>Developer mode</strong> (top-right toggle).' },
   { title: 'Load the extension', body: 'Click <strong>Load unpacked</strong> and select the unzipped folder. The Leadvault icon will appear in your toolbar.' },
   { title: 'Configure the extension', body: 'Click the toolbar icon → enter your <strong>Dashboard URL</strong> and <strong>API Key</strong> from the table below → click <strong>Save &amp; Test Connection</strong>.' },
-  { title: 'Extract leads', body: 'Go to <strong>linkedin.com/search/results/people/</strong>, run a search, then click <strong>Extract Leads from This Page</strong> in the popup. Leads appear in the <strong>Extracted Leads</strong> tab instantly.' },
+  { title: 'Extract leads', body: 'Go to a <strong>LinkedIn People search</strong> or <strong>Sales Navigator</strong> search page. Click the green <strong>⬆ Extract Leads</strong> button — it auto-scrolls the page, collects all visible leads, and syncs them directly to your dashboard.' },
 ];
 
 const FEATURES = [
-  { icon: '🔍', title: 'One-click extraction', body: 'Scrapes name, title, company, location from LinkedIn search results.' },
-  { icon: '⚡', title: 'Instant sync', body: 'POSTs directly to /api/leads/import — no CSV, no manual steps.' },
-  { icon: '🔒', title: 'API key auth', body: 'All requests authenticated with your private API key.' },
-  { icon: '🔵', title: 'Floating button', body: 'A "Extract with Leadvault" button appears on every LinkedIn search page.' },
+  { icon: '📜', title: 'Auto-scroll extraction', body: 'Automatically scrolls through results to capture every lead on the page — no manual scrolling needed.' },
+  { icon: '🔗', title: 'Sales Navigator support', body: 'Works on both LinkedIn People Search and Sales Navigator search pages.' },
+  { icon: '⚡', title: 'Live progress indicator', body: 'The floating button shows "Extracting… (23 found)" and updates in real time as leads are collected.' },
+  { icon: '🔒', title: 'Secure API sync', body: 'All requests are authenticated with your private API key — no CSV, no copy-paste.' },
 ];
 
 function DownloadIcon() {
