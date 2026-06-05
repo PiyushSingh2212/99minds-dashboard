@@ -241,25 +241,61 @@ function parseCsv(text) {
     const vals = parseLine(line);
     const obj = {};
     headers.forEach((h, i) => { obj[camel(h)] = vals[i] ?? ''; });
-    return {
-      fullName:      obj.fullName || obj['first Name'] + ' ' + obj['last Name'] || obj.name || '',
-      firstName:     obj.firstName || obj['first Name'] || '',
-      lastName:      obj.lastName  || obj['last Name']  || '',
-      currentJob:    obj.currentJob || obj.title || obj['current Job Title'] || '',
-      companyName:   obj.companyName || obj.company || obj['company Name'] || '',
-      linkedinUrl:   obj.linkedinUrl || obj['linkedin Url'] || obj['profile Url'] || '',
-      salesNavUrl:   obj.salesNavUrl || '',
-      location:      obj.location || '',
-      emailGuess:    obj.emailGuess || obj['email Guess'] || '',
+
+    // camel() preserves first-char case, so evaboot headers like "Full Name" → "FullName"
+    const fullName = obj.fullName || obj.FullName ||
+      ((obj.firstName || obj.FirstName || '') + ' ' + (obj.lastName || obj.LastName || '')).trim() ||
+      obj.name || '';
+
+    const firstName = obj.firstName || obj.FirstName || fullName.split(' ')[0] || '';
+    const lastName  = obj.lastName  || obj.LastName  || fullName.split(' ').slice(1).join(' ') || '';
+
+    // Evaboot "Matches Filters" → MatchesFilters = 'YES' when lead matches
+    const rawMF = (obj.MatchesFilters || obj.matchesFilters || '').toUpperCase();
+    const matchesIcp = obj.matchesIcp || (rawMF === 'YES' ? 'YES' : '') || undefined;
+
+    // Evaboot salesNavUrl may have a trailing comma inside the URL value
+    const rawSalesNavUrl = (obj.salesNavUrl || obj.SalesNavigatorURL || '').replace(/,+$/, '');
+
+    const lead = {
+      fullName,
+      firstName,
+      lastName,
+      currentJob:    obj.currentJob || obj.CurrentJob || obj.title || '',
+      companyName:   obj.companyName || obj.CompanyName || obj.company || '',
+      linkedinUrl:   obj.linkedinUrl || obj.LinkedInURL || obj.profileUrl || '',
+      salesNavUrl:   rawSalesNavUrl,
+      location:      obj.location || obj.Location || '',
+      emailGuess:    obj.emailGuess || obj.Email || '',
       icpScore:      obj.icpScore ? Number(obj.icpScore) : null,
-      matchesIcp:    obj.matchesIcp || obj['matches Icp'] || '',
-      scoreReason:   obj.scoreReason || obj['score Reason'] || '',
-      outreachAngle: obj.outreachAngle || obj['outreach Angle'] || '',
-      platformGuess: obj.platformGuess || obj['platform Guess'] || '',
-      industryTag:   obj.industryTag || obj['industry Tag'] || obj.industry || '',
-      headline:      obj.headline || '',
-      companySize:   obj['company Size'] || obj.companySize || '',
+      scoreReason:   obj.scoreReason || '',
+      outreachAngle: obj.outreachAngle || '',
+      platformGuess: obj.platformGuess || '',
+      industryTag:   obj.industryTag || obj.CompanyIndustry || obj.ProfileIndustry || obj.industry || '',
+      headline:      obj.headline || obj.ProfileHeadline || '',
+      summary:       obj.summary || obj.ProfileSummary || '',
+      jobDescription: obj.jobDescription || obj.JobDescription || '',
+      companySize:   obj.companySize || obj.CompanyEmployeeRange || '',
+      companyDomain: obj.companyDomain || obj.CompanyDomain || '',
+      companyWebsite: obj.companyWebsite || obj.CompanyWebsiteURL || '',
+      companyIndustry: obj.companyIndustry || obj.CompanyIndustry || '',
+      companyType:   obj.companyType || obj.CompanyType || '',
+      companyLocation: obj.companyLocation || obj.CompanyLocation || '',
+      companyFounded: obj.companyFounded || obj.CompanyYearFounded || '',
+      companyDescription: obj.companyDescription || obj.CompanyDescription || '',
+      companySpecialities: obj.companySpecialities || obj.CompanySpecialities || '',
+      companyLogo:   obj.companyLogo || obj.CompanyProfilePicture || '',
+      profilePicture: obj.profilePicture || obj.ProfilePicture || '',
+      connections:   obj.connections || obj.Connections ? Number(obj.connections || obj.Connections) || null : null,
+      yearsInPosition: obj.yearsInPosition || obj.YearsInPosition ? Number(obj.yearsInPosition || obj.YearsInPosition) || null : null,
+      monthsInPosition: obj.monthsInPosition || obj.MonthsInPosition ? Number(obj.monthsInPosition || obj.MonthsInPosition) || null : null,
+      isOpenToWork:  obj.IsOpenToWork === 'TRUE' || obj.isOpenToWork === 'true' || false,
+      isPremium:     obj.IsPremium === 'TRUE' || obj.isPremium === 'true' || false,
+      source:        'csv-import',
     };
+
+    if (matchesIcp) lead.matchesIcp = matchesIcp;
+    return lead;
   }).filter(l => l.fullName && l.fullName.trim() !== ' ');
 }
 
