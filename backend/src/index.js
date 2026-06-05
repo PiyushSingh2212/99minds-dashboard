@@ -7,7 +7,17 @@ const authJwt  = require('./middleware/authJwt');
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow: no origin (curl/mobile), chrome extensions, configured frontend
+    if (!origin || origin.startsWith('chrome-extension://') || origin === process.env.FRONTEND_URL) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
@@ -29,7 +39,8 @@ if (process.env.VERCEL === '1') {
 }
 
 // ── Public routes ─────────────────────────────────────────────────
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/extension', require('./routes/extension'));
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date() }));
 
 // ── Protected routes ──────────────────────────────────────────────
