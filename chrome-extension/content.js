@@ -160,25 +160,32 @@
     const leads = [];
     const seen  = new Set();
 
-    document.querySelectorAll('a[href*="/sales/people/"]').forEach((link) => {
+    // Sales Nav uses /sales/lead/ in search results, /sales/people/ on profile pages
+    const salesLinks = [
+      ...document.querySelectorAll('a[href*="/sales/lead/"]'),
+      ...document.querySelectorAll('a[href*="/sales/people/"]'),
+    ];
+
+    salesLinks.forEach((link) => {
       const profileUrl = link.href?.split('?')[0];
       if (!profileUrl || seen.has(profileUrl)) return;
-      seen.add(profileUrl);
-
       const container =
         link.closest('li') ||
         link.closest('[data-entity-urn]') ||
         link.closest('[class*="result"]') ||
         link.parentElement;
-
-      const lead = parseSalesNavCard(container || link, link, profileUrl);
+      if (!container) return;
+      seen.add(profileUrl);
+      const lead = parseSalesNavCard(container, link, profileUrl);
       if (lead) leads.push(lead);
     });
 
     // Fallback: entity-urn containers
     if (!leads.length) {
       document.querySelectorAll('[data-entity-urn*="member"]').forEach((card) => {
-        const link = card.querySelector('a[href*="/sales/people/"]') || card.querySelector('a[href*="/in/"]');
+        const link = card.querySelector('a[href*="/sales/lead/"]') ||
+                     card.querySelector('a[href*="/sales/people/"]') ||
+                     card.querySelector('a[href*="/in/"]');
         const profileUrl = link?.href?.split('?')[0];
         if (!profileUrl || seen.has(profileUrl)) return;
         seen.add(profileUrl);
@@ -192,9 +199,14 @@
 
   function parseSalesNavCard(card, link, profileUrl) {
     try {
-      // Name from link or first span inside link
-      const nameEl  = link.querySelector('span') || link;
-      let fullName  = nameEl.textContent?.trim().replace(/\s+/g, ' ') || '';
+      // Name: find the deepest/innermost span in the link (avoids wrapper spans)
+      let fullName = '';
+      const spans = [...link.querySelectorAll('span')].filter(s => !s.querySelector('span'));
+      for (const s of spans) {
+        const t = s.textContent.trim().replace(/\s+/g, ' ');
+        if (t.length > 1 && t.length < 70) { fullName = t; break; }
+      }
+      if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return null;
 
       let jobTitle = '', company = '', location = '';

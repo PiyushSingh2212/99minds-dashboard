@@ -128,33 +128,45 @@ function extractLeadsFromPage() {
   const seen  = new Set();
 
   if (isSalesNav) {
-    document.querySelectorAll('a[href*="/sales/people/"]').forEach((link) => {
+    // Sales Nav uses /sales/lead/ in search results, /sales/people/ on profile pages
+    const salesLinks = [
+      ...document.querySelectorAll('a[href*="/sales/lead/"]'),
+      ...document.querySelectorAll('a[href*="/sales/people/"]'),
+    ];
+
+    salesLinks.forEach((link) => {
       const profileUrl = link.href?.split('?')[0];
       if (!profileUrl || seen.has(profileUrl)) return;
+      // Skip nav/sidebar links — real result links are inside list items
+      const card = link.closest('li') || link.closest('[data-entity-urn]') ||
+                   link.closest('[class*="result"]') || link.parentElement;
+      if (!card) return;
       seen.add(profileUrl);
 
-      const card = link.closest('li') || link.closest('[data-entity-urn]') || link.parentElement;
-
-      const nameEl = link.querySelector('span') || link;
-      let fullName = nameEl.textContent?.trim().replace(/\s+/g, ' ') || '';
+      // Name: prefer a span inside the link, fall back to link text
+      let fullName = '';
+      const spans = [...link.querySelectorAll('span')].filter(s => !s.querySelector('span'));
+      for (const s of spans) {
+        const t = s.textContent.trim().replace(/\s+/g, ' ');
+        if (t.length > 1 && t.length < 70) { fullName = t; break; }
+      }
+      if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return;
 
       let jobTitle = '', company = '', location = '';
-      if (card) {
-        const texts = [...card.querySelectorAll('span, dt, dd, p')]
-          .map((el) => el.textContent.trim().replace(/\s+/g, ' '))
-          .filter((t) => t.length > 1 && t.length < 120 && t !== fullName && !t.includes(fullName));
+      const texts = [...card.querySelectorAll('span, dd, p')]
+        .map((el) => el.textContent.trim().replace(/\s+/g, ' '))
+        .filter((t) => t.length > 1 && t.length < 120 && t !== fullName && !t.includes(fullName));
 
-        if (texts[0]) jobTitle = texts[0];
-        if (jobTitle.includes(' at ')) {
-          const idx = jobTitle.lastIndexOf(' at ');
-          company   = jobTitle.substring(idx + 4).trim();
-          jobTitle  = jobTitle.substring(0, idx).trim();
-        } else if (texts[1]) {
-          company = texts[1];
-        }
-        if (texts[2] && texts[2] !== jobTitle && texts[2] !== company) location = texts[2];
+      if (texts[0]) jobTitle = texts[0];
+      if (jobTitle.includes(' at ')) {
+        const idx = jobTitle.lastIndexOf(' at ');
+        company   = jobTitle.substring(idx + 4).trim();
+        jobTitle  = jobTitle.substring(0, idx).trim();
+      } else if (texts[1]) {
+        company = texts[1];
       }
+      if (texts[2] && texts[2] !== jobTitle && texts[2] !== company) location = texts[2];
 
       const parts = fullName.split(' ');
       leads.push({
