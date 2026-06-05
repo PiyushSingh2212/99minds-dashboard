@@ -123,9 +123,14 @@ export default function ConnectionsTab({ stats }) {
             </select>
           </div>
           <div className="card" style={{ overflow: 'hidden' }}>
-            <table>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ minWidth: 540 }}>
               <thead>
-                <tr><th>Name</th><th>Title</th><th>Company</th><th>Status</th><th>LinkedIn</th></tr>
+                <tr>
+                  {[['Name'],['Title'],['Company'],['Status','center'],['LinkedIn','center']].map(([h, align]) => (
+                    <th key={h} style={{ whiteSpace: 'nowrap', textAlign: align || 'left' }}>{h}</th>
+                  ))}
+                </tr>
               </thead>
               <tbody>
                 {loading && (
@@ -139,10 +144,10 @@ export default function ConnectionsTab({ stats }) {
                 )}
                 {connections.map(c => (
                   <tr key={c._id}>
-                    <td style={{ fontWeight: 600 }}>{c.name}</td>
-                    <td style={{ color: 'var(--concrete)', fontSize: 12 }}>{c.title || '—'}</td>
-                    <td>{c.company || '—'}</td>
-                    <td>
+                    <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{c.name}</td>
+                    <td><div style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--concrete)', fontSize: 12 }}>{c.title || '—'}</div></td>
+                    <td><div style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.company || '—'}</div></td>
+                    <td style={{ textAlign: 'center' }}>
                       <select className={`badge ${STATUS_COLORS[c.status]}`}
                         style={{ border: 'none', cursor: 'pointer', background: 'none', fontSize: 11, fontWeight: 600 }}
                         value={c.status} onChange={e => updateStatus(c, e.target.value)}>
@@ -151,7 +156,7 @@ export default function ConnectionsTab({ stats }) {
                         ))}
                       </select>
                     </td>
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       {c.linkedinUrl
                         ? <a href={c.linkedinUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>View ↗</a>
                         : <span style={{ color: 'var(--ash)' }}>—</span>}
@@ -160,6 +165,7 @@ export default function ConnectionsTab({ stats }) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
           {pages > 1 && (
             <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 12, alignItems: 'center' }}>

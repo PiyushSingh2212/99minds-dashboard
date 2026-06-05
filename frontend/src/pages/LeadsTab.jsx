@@ -152,12 +152,18 @@ export default function LeadsTab({ stats }) {
 
       {/* ── Table ── */}
       <div className="card" style={{ overflow: 'hidden' }}>
-        <table>
+        <div style={{ overflowX: 'auto' }}>
+        <table style={{ minWidth: 900 }}>
           <thead>
             <tr>
-              <th>Name</th><th>Title</th><th>Company</th><th>Score</th>
-              <th>ICP</th><th>Email</th><th>Outreach Angle</th>
-              <th>Industry</th><th>LinkedIn</th><th>Contacted</th>
+              {[
+                ['Name'],['Title'],['Company'],
+                ['Score','center'],['ICP','center'],
+                ['Email'],['Outreach Angle'],['Industry'],
+                ['LinkedIn','center'],['Contacted','center'],
+              ].map(([h, align]) => (
+                <th key={h} style={{ whiteSpace: 'nowrap', textAlign: align || 'left' }}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -172,24 +178,20 @@ export default function LeadsTab({ stats }) {
             )}
             {leads.map(lead => (
               <tr key={lead._id}>
-                <td style={{ fontWeight: 600 }}>{lead.fullName}</td>
-                <td style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--concrete)' }}>
-                  {lead.currentJob || '—'}
-                </td>
-                <td>{lead.companyName || '—'}</td>
-                <td><span className={`pill ${scoreClass(lead.icpScore)}`}>{lead.icpScore ?? '—'}</span></td>
-                <td><span className={`badge ${icpClass(lead.matchesIcp)}`}>{lead.matchesIcp || '—'}</span></td>
-                <td style={{ fontSize: 12, color: 'var(--concrete)' }}>{lead.emailGuess || '—'}</td>
-                <td style={{ maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--concrete)' }} title={lead.outreachAngle}>
-                  {lead.outreachAngle || '—'}
-                </td>
+                <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{lead.fullName}</td>
+                <td><div style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--concrete)' }}>{lead.currentJob || '—'}</div></td>
+                <td><div style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.companyName || '—'}</div></td>
+                <td style={{ textAlign: 'center' }}><span className={`pill ${scoreClass(lead.icpScore)}`}>{lead.icpScore ?? '—'}</span></td>
+                <td style={{ textAlign: 'center' }}><span className={`badge ${icpClass(lead.matchesIcp)}`}>{lead.matchesIcp || '—'}</span></td>
+                <td><div style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--concrete)' }}>{lead.emailGuess || '—'}</div></td>
+                <td><div style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--concrete)' }} title={lead.outreachAngle}>{lead.outreachAngle || '—'}</div></td>
                 <td>{lead.industryTag && <span className="badge badge-purple">{lead.industryTag}</span>}</td>
-                <td>
+                <td style={{ textAlign: 'center' }}>
                   {lead.linkedinUrl
                     ? <a href={lead.linkedinUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>View ↗</a>
                     : <span style={{ color: 'var(--ash)' }}>—</span>}
                 </td>
-                <td>
+                <td style={{ textAlign: 'center' }}>
                   <button className={`badge ${lead.contacted ? 'badge-green' : 'badge-gray'}`}
                     style={{ border: 'none', cursor: 'pointer' }} onClick={() => toggleContacted(lead)}>
                     {lead.contacted ? '✓ Done' : 'Mark'}
@@ -199,6 +201,7 @@ export default function LeadsTab({ stats }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* ── Pagination ── */}

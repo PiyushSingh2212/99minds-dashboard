@@ -95,7 +95,7 @@ export default function AuthPage({ onAuth }) {
     choice:      'Continue with your email address to create an account or sign in.',
     form:        mode === 'login'
       ? 'Enter your email and password to access your dashboard.'
-      : 'Set up your 99minds dashboard account.',
+      : 'Set up your Leadvault account.',
     'reset-email': 'Enter your email address and we\'ll generate a reset code in the server logs.',
     'reset-otp':   'Your reset code is shown below. Enter your new password to continue.',
   };
@@ -115,6 +115,7 @@ export default function AuthPage({ onAuth }) {
 
         {/* Body */}
         <div style={s.body}>
+          <img src="/logo-icon.png" alt="Leadvault" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', marginBottom: 20, display: 'block' }} />
           <h1 style={s.heading}>{HEADINGS[step]}</h1>
           <p style={s.desc}>{DESCS[step]}</p>
 
