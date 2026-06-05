@@ -127,7 +127,27 @@ function extractLeadsFromPage() {
   const leads = [];
   const seen  = new Set();
 
+  // Build map of salesNavLeadId → LinkedIn publicIdentifier from embedded <code> JSON
+  function buildProfileMap() {
+    const map = {};
+    document.querySelectorAll('code').forEach(code => {
+      try {
+        const text = code.textContent;
+        if (!text.includes('publicIdentifier')) return;
+        const matches = [...text.matchAll(/"publicIdentifier"\s*:\s*"([^"]+)"/g)];
+        matches.forEach(m => {
+          const slug = m[1];
+          const ctx  = text.substring(Math.max(0, m.index - 1200), m.index + 200);
+          const idMatch = ctx.match(/ACw[A-Za-z0-9+/_-]{20,}/);
+          if (idMatch) map[idMatch[0]] = slug;
+        });
+      } catch {}
+    });
+    return map;
+  }
+
   if (isSalesNav) {
+    const profMap = buildProfileMap();
     // Sales Nav uses /sales/lead/ in search results, /sales/people/ on profile pages
     const salesLinks = [
       ...document.querySelectorAll('a[href*="/sales/lead/"]'),
@@ -153,10 +173,13 @@ function extractLeadsFromPage() {
       if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return;
 
-      // Actual LinkedIn /in/ URL — present in some card layouts
-      const inLink = card.querySelector('a[href*="linkedin.com/in/"]') ||
-                     card.querySelector('a[href*="/in/"]');
-      const linkedinUrl = inLink?.href?.split('?')[0] || '';
+      // Resolve actual LinkedIn /in/ URL via profile map, fall back to DOM search
+      const leadId = salesNavUrl.split('/sales/lead/')[1]?.split(',')[0]
+                  || salesNavUrl.split('/sales/people/')[1]?.split(',')[0];
+      const slug   = leadId ? profMap[leadId] : null;
+      const linkedinUrl = slug
+        ? `https://www.linkedin.com/in/${slug}`
+        : (card.querySelector('a[href*="linkedin.com/in/"]')?.href?.split('?')[0] || '');
 
       let jobTitle = '', company = '', location = '';
       const texts = [...card.querySelectorAll('span, dd, p')]

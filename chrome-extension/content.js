@@ -63,6 +63,29 @@
   btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
   btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
 
+  /* ─── LinkedIn profile map from embedded page JSON ──────────── */
+  // LinkedIn embeds all profile data in <code> elements for their React app.
+  // We parse them to build a map: salesNavLeadId → publicIdentifier (profile slug).
+  function buildProfileMap() {
+    const map = {};
+    document.querySelectorAll('code').forEach(code => {
+      try {
+        const text = code.textContent;
+        if (!text.includes('publicIdentifier')) return;
+        // Find every publicIdentifier and the Sales Nav lead ID near it
+        const matches = [...text.matchAll(/"publicIdentifier"\s*:\s*"([^"]+)"/g)];
+        matches.forEach(m => {
+          const slug = m[1];
+          const ctx  = text.substring(Math.max(0, m.index - 1200), m.index + 200);
+          // Sales Nav lead IDs start with ACw (base64-encoded member URN)
+          const idMatch = ctx.match(/ACw[A-Za-z0-9+/_-]{20,}/);
+          if (idMatch) map[idMatch[0]] = slug;
+        });
+      } catch {}
+    });
+    return map;
+  }
+
   /* ─── DOM extraction ─────────────────────────────────────────── */
 
   function extractVisible() {
@@ -157,8 +180,9 @@
   }
 
   function extractSalesNav() {
-    const leads = [];
-    const seen  = new Set();
+    const leads   = [];
+    const seen    = new Set();
+    const profMap = buildProfileMap(); // slug map built once per extraction
 
     // Sales Nav uses /sales/lead/ in search results, /sales/people/ on profile pages
     const salesLinks = [
@@ -167,16 +191,25 @@
     ];
 
     salesLinks.forEach((link) => {
-      const profileUrl = link.href?.split('?')[0];
-      if (!profileUrl || seen.has(profileUrl)) return;
+      const salesNavUrl = link.href?.split('?')[0];
+      if (!salesNavUrl || seen.has(salesNavUrl)) return;
       const container =
         link.closest('li') ||
         link.closest('[data-entity-urn]') ||
         link.closest('[class*="result"]') ||
         link.parentElement;
       if (!container) return;
-      seen.add(profileUrl);
-      const lead = parseSalesNavCard(container, link, profileUrl);
+      seen.add(salesNavUrl);
+
+      // Resolve actual LinkedIn /in/ URL via the profile map
+      const leadId    = salesNavUrl.split('/sales/lead/')[1]?.split(',')[0]
+                     || salesNavUrl.split('/sales/people/')[1]?.split(',')[0];
+      const slug      = leadId ? profMap[leadId] : null;
+      const resolvedLinkedInUrl = slug
+        ? `https://www.linkedin.com/in/${slug}`
+        : (container.querySelector('a[href*="linkedin.com/in/"]')?.href?.split('?')[0] || '');
+
+      const lead = parseSalesNavCard(container, link, salesNavUrl, resolvedLinkedInUrl);
       if (lead) leads.push(lead);
     });
 
@@ -186,10 +219,13 @@
         const link = card.querySelector('a[href*="/sales/lead/"]') ||
                      card.querySelector('a[href*="/sales/people/"]') ||
                      card.querySelector('a[href*="/in/"]');
-        const profileUrl = link?.href?.split('?')[0];
-        if (!profileUrl || seen.has(profileUrl)) return;
-        seen.add(profileUrl);
-        const lead = parseSalesNavCard(card, link, profileUrl);
+        const salesNavUrl = link?.href?.split('?')[0];
+        if (!salesNavUrl || seen.has(salesNavUrl)) return;
+        seen.add(salesNavUrl);
+        const leadId = salesNavUrl.split('/sales/lead/')[1]?.split(',')[0];
+        const slug   = leadId ? profMap[leadId] : null;
+        const resolvedLinkedInUrl = slug ? `https://www.linkedin.com/in/${slug}` : '';
+        const lead = parseSalesNavCard(card, link, salesNavUrl, resolvedLinkedInUrl);
         if (lead) leads.push(lead);
       });
     }
@@ -197,7 +233,7 @@
     return leads;
   }
 
-  function parseSalesNavCard(card, link, salesNavUrl) {
+  function parseSalesNavCard(card, link, salesNavUrl, linkedinUrl = '') {
     try {
       // Name: find the deepest/innermost span in the link (avoids wrapper spans)
       let fullName = '';
@@ -208,11 +244,6 @@
       }
       if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return null;
-
-      // Actual LinkedIn profile URL (/in/) — Sales Nav cards sometimes include it
-      const inLink = card.querySelector('a[href*="linkedin.com/in/"]') ||
-                     card.querySelector('a[href*="/in/"]');
-      const linkedinUrl = inLink?.href?.split('?')[0] || '';
 
       let jobTitle = '', company = '', location = '';
 
