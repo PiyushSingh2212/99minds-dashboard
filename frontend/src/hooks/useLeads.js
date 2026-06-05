@@ -16,7 +16,7 @@ export default function useLeads() {
     matchesIcp: '',
     industry: '',
     contacted: '',
-    sort: '-icpScore',
+    sort: '-importedAt',
   });
 
   const load = useCallback(async (f = filters) => {

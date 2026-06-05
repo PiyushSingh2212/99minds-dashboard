@@ -129,9 +129,9 @@ export default function LeadsTab({ stats }) {
           <option value="NO">NO</option>
         </select>
         <select value={filters.sort} onChange={e => update({ sort: e.target.value })}>
+          <option value="-importedAt">Newest first</option>
           <option value="-icpScore">Score ↓</option>
           <option value="icpScore">Score ↑</option>
-          <option value="-importedAt">Newest</option>
           <option value="fullName">Name A–Z</option>
         </select>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -176,9 +176,20 @@ export default function LeadsTab({ stats }) {
                 <div style={{ color: 'var(--ash)', fontSize: 12, marginTop: 4 }}>Import a CSV from the Chrome extension to get started.</div>
               </td></tr>
             )}
-            {leads.map(lead => (
+            {leads.map(lead => {
+              const isNew = lead.importedAt && (Date.now() - new Date(lead.importedAt).getTime()) < 24 * 60 * 60 * 1000;
+              return (
               <tr key={lead._id}>
-                <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{lead.fullName}</td>
+                <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {lead.fullName}
+                    {isNew && (
+                      <span style={{ fontSize: 10, fontWeight: 700, background: '#dcfce7', color: '#16a34a', borderRadius: 99, padding: '1px 7px', letterSpacing: '.03em', flexShrink: 0 }}>
+                        NEW
+                      </span>
+                    )}
+                  </span>
+                </td>
                 <td><div style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--concrete)' }}>{lead.currentJob || '—'}</div></td>
                 <td><div style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.companyName || '—'}</div></td>
                 <td style={{ textAlign: 'center' }}><span className={`pill ${scoreClass(lead.icpScore)}`}>{lead.icpScore ?? '—'}</span></td>
@@ -198,7 +209,8 @@ export default function LeadsTab({ stats }) {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </div>
