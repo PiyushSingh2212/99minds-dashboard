@@ -117,8 +117,18 @@ router.get('/export', async (req, res) => {
     ].join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="99minds-leads.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="leadvault-leads.csv"');
     res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/leads/all — wipe all leads
+router.delete('/all', auth, async (req, res) => {
+  try {
+    const { deletedCount } = await Lead.deleteMany({});
+    res.json({ ok: true, deleted: deletedCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
