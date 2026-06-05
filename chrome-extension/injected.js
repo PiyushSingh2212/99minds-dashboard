@@ -36,26 +36,36 @@
     return root + (best.fileIdentifyingUrlPathSegment || '');
   }
 
+  /* ── Deep-walk to find publicIdentifier or /in/ URL anywhere in element ───── */
+  function findLinkedInSlug(obj, depth) {
+    if (!obj || typeof obj !== 'object' || depth > 6) return '';
+    // Direct string fields that carry the slug or a /in/ URL
+    for (const k of ['publicIdentifier', 'profileIdentifier', 'flagshipProfileUrl',
+                      'memberProfileUrl', 'linkedInProfileUrl', 'profileUrl']) {
+      const v = obj[k];
+      if (typeof v !== 'string' || !v) continue;
+      if (k === 'publicIdentifier' || k === 'profileIdentifier') return v;
+      const m = v.match(/linkedin\.com\/in\/([^/?#\s]+)/);
+      if (m) return m[1];
+    }
+    // Recurse into nested objects (skip arrays of primitives)
+    for (const v of Object.values(obj)) {
+      if (v && typeof v === 'object') {
+        const found = findLinkedInSlug(v, depth + 1);
+        if (found) return found;
+      }
+    }
+    return '';
+  }
+
   /* ── Sales Navigator format ──────────────────────────────────────────────── */
-  // Response shape: { elements: [ { firstName, lastName, fullName, headline,
-  //   geoRegion, currentPositions: [{title, companyName, yearsInPosition, ...}],
-  //   entityUrn, publicIdentifier, profilePictureDisplayImage, numOfConnections,
-  //   openLink, premium } ] }
   function extractSalesNavLeads(elements) {
     const leads = [];
     for (const el of elements) {
       if (!el || (!el.firstName && !el.fullName)) continue;
       const pos  = el.currentPositions?.[0] || {};
-      // publicIdentifier may be top-level or nested; flagshipProfileUrl is a direct /in/ URL
-      const slug = el.publicIdentifier
-        || el.memberIdentity?.publicIdentifier
-        || el.profileIdentifier
-        || '';
-      const flagshipUrl = (el.flagshipProfileUrl || el.memberProfileUrl || el.linkedInProfileUrl || '').split('?')[0];
-      const slugFromUrl = flagshipUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] || '';
-      const linkedinUrl = slug
-        ? `https://www.linkedin.com/in/${slug}`
-        : (slugFromUrl ? `https://www.linkedin.com/in/${slugFromUrl}` : flagshipUrl);
+      const slug = findLinkedInSlug(el, 0);
+      const linkedinUrl = slug ? `https://www.linkedin.com/in/${slug}` : '';
       // Company logo sometimes nested inside position resolution result
       const coLogo = extractPic(pos.companyUrnResolutionResult?.logo || pos.logo);
       leads.push({
@@ -157,12 +167,15 @@
       const elements = data?.elements || data?.data?.elements || [];
       if (Array.isArray(elements) && elements.length > 0 &&
           (elements[0]?.firstName !== undefined || elements[0]?.entityUrn?.includes('salesProfile'))) {
-        // Debug: log first element keys so we can see which URL field is present
+        // Debug: log what we found for the first element
         const e0 = elements[0];
-        const urlFields = ['publicIdentifier','flagshipProfileUrl','memberProfileUrl','linkedInProfileUrl','profileIdentifier']
-          .filter(k => e0[k]);
-        if (urlFields.length) console.log('[LV] URL fields in API response:', urlFields.map(k => `${k}=${e0[k]}`));
-        else console.warn('[LV] No LinkedIn URL field found in element. Keys:', Object.keys(e0).join(', '));
+        const slug0 = findLinkedInSlug(e0, 0);
+        if (slug0) {
+          console.log('[LV] LinkedIn slug found:', slug0, '— linkedinUrl will be set');
+        } else {
+          // Dump the full first element so we can find where the URL is hidden
+          console.warn('[LV] No LinkedIn slug found. First element dump:', JSON.stringify(e0).substring(0, 800));
+        }
         leads = extractSalesNavLeads(elements);
       } else {
         leads = extractVoyagerLeads(data);
