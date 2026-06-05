@@ -35,8 +35,10 @@ export const login         = (email, password) =>
   axios.post(`${BASE}/auth/login`,          { email, password }).then(r => r.data);
 export const signup        = (email, password, name) =>
   axios.post(`${BASE}/auth/signup`,         { email, password, name }).then(r => r.data);
-export const resetPassword = (email, newPassword) =>
-  axios.post(`${BASE}/auth/reset-password`, { email, newPassword }).then(r => r.data);
+export const requestReset  = (email) =>
+  axios.post(`${BASE}/auth/request-reset`,  { email }).then(r => r.data);
+export const resetPassword = (email, otp, newPassword) =>
+  axios.post(`${BASE}/auth/reset-password`, { email, otp, newPassword }).then(r => r.data);
 
 export const getStats       = ()       => api.get('/stats').then(r => r.data);
 export const getLeads       = (params) => api.get('/leads', { params }).then(r => r.data);
