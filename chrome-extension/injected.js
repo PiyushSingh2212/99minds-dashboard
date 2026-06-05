@@ -46,7 +46,12 @@
     for (const el of elements) {
       if (!el || (!el.firstName && !el.fullName)) continue;
       const pos  = el.currentPositions?.[0] || {};
-      const slug = el.publicIdentifier || '';
+      // publicIdentifier may be top-level or nested in various places
+      const slug = el.publicIdentifier
+        || el.memberIdentity?.publicIdentifier
+        || el.profileIdentifier
+        || el.linkedInMemberUrn?.match(/urn:li:member:([^,)]+)/)?.[1]
+        || '';
       // Company logo sometimes nested inside position resolution result
       const coLogo = extractPic(pos.companyUrnResolutionResult?.logo || pos.logo);
       leads.push({

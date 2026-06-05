@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Leadvault Lead Extractor",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Extract LinkedIn & Sales Navigator leads via API interception and sync to your Leadvault dashboard.",
   "permissions": ["activeTab", "storage", "scripting", "tabs"],
   "host_permissions": ["https://www.linkedin.com/*"],
@@ -13,12 +13,23 @@
       "128": "icons/icon128.png"
     }
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://www.linkedin.com/*"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],
       "js": ["injected.js"],
       "run_at": "document_start",
       "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["inject-script.js"],
+      "run_at": "document_start"
     },
     {
       "matches": [
