@@ -46,6 +46,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date() }));
 // ── Protected routes ──────────────────────────────────────────────
 app.use(authJwt);
 app.use('/api/leads',       require('./routes/leads'));
+app.use('/api/ai',          require('./routes/ai'));
 app.use('/api/connections', require('./routes/connections'));
 app.use('/api/automation',  require('./routes/automation'));
 app.use('/api/stats',       require('./routes/stats'));

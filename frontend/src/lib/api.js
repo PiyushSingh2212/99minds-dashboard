@@ -50,6 +50,11 @@ export const exportLeadsCsv = () => {
   return token ? `${BASE}/leads/export?token=${token}` : `${BASE}/leads/export?apiKey=${KEY}`;
 };
 
+export const aiScore    = (leadIds)          => api.post('/ai/score',    { leadIds }).then(r => r.data);
+export const aiEnrich   = (leadIds)          => api.post('/ai/enrich',   { leadIds }).then(r => r.data);
+export const aiOutreach = (leadIds, context) => api.post('/ai/outreach', { leadIds, context }).then(r => r.data);
+export const getAllLeadIds = () => api.get('/leads', { params: { limit: 1000, fields: '_id' } }).then(r => r.data.leads.map(l => l._id));
+
 export const getConnections    = (p)    => api.get('/connections', { params: p }).then(r => r.data);
 export const patchConnection   = (id, d) => api.patch(`/connections/${id}`, d).then(r => r.data);
 export const getActivity       = ()     => api.get('/connections/activity').then(r => r.data);
