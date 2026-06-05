@@ -27,8 +27,29 @@
   }
 
   // Receive intercepted leads from injected.js (MAIN world → isolated world)
-  window.addEventListener('message', (e) => {
-    if (e.source === window && e.data?.type === 'LV_LEADS') addLeads(e.data.leads || []);
+  window.addEventListener('message', async (e) => {
+    if (e.source !== window || e.data?.type !== 'LV_LEADS') return;
+    const incoming = e.data.leads || [];
+    if (!incoming.length) return;
+
+    // For leads missing LinkedIn URL, ask background to resolve via Sales Nav profile API
+    const missing = incoming.filter(l => !l.linkedinUrl && l.entityUrn);
+    if (missing.length) {
+      try {
+        const resp = await new Promise(resolve =>
+          chrome.runtime.sendMessage({ action: 'resolveLinkedInUrls', leads: missing }, resolve)
+        );
+        if (resp?.ok && resp.resolved) {
+          for (const lead of incoming) {
+            if (!lead.linkedinUrl && lead.salesNavUrl && resp.resolved[lead.salesNavUrl]) {
+              lead.linkedinUrl = resp.resolved[lead.salesNavUrl];
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    addLeads(incoming);
   });
 
   // Popup or other parts of extension can ask for accumulated leads

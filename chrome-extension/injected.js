@@ -12,9 +12,13 @@
     'salesApiProspectSearch',
     'salesApiSavedLeadSearch',
     'salesApiPeopleSearch',
+    'salesApiProfiles',
+    'salesApiProfile',
+    'salesApiMemberProfile',
     '/voyager/api/search/blended',
     '/voyager/api/search/dash/clusters',
     '/voyager/api/search/hits',
+    '/voyager/api/identity/profiles',
   ];
   const shouldIntercept = (url) => url && INTERCEPT.some(p => url.includes(p));
 
@@ -79,6 +83,7 @@
         summary:          el.summary          || '',
         linkedinUrl,
         salesNavUrl:      urnToSalesNavUrl(el.entityUrn || ''),
+        entityUrn:        el.entityUrn || '',
         profilePicture:   extractPic(el.profilePictureDisplayImage),
         companyLogo:      coLogo,
         connections:      el.numOfConnections  ? Number(el.numOfConnections)  : null,
