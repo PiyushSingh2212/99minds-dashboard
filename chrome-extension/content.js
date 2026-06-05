@@ -197,7 +197,7 @@
     return leads;
   }
 
-  function parseSalesNavCard(card, link, profileUrl) {
+  function parseSalesNavCard(card, link, salesNavUrl) {
     try {
       // Name: find the deepest/innermost span in the link (avoids wrapper spans)
       let fullName = '';
@@ -208,6 +208,11 @@
       }
       if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return null;
+
+      // Actual LinkedIn profile URL (/in/) — Sales Nav cards sometimes include it
+      const inLink = card.querySelector('a[href*="linkedin.com/in/"]') ||
+                     card.querySelector('a[href*="/in/"]');
+      const linkedinUrl = inLink?.href?.split('?')[0] || '';
 
       let jobTitle = '', company = '', location = '';
 
@@ -238,7 +243,8 @@
         currentJob:  jobTitle,
         companyName: company,
         location,
-        linkedinUrl: profileUrl,
+        linkedinUrl,
+        salesNavUrl,
         source: 'sales-navigator',
       };
     } catch { return null; }

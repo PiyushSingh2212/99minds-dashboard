@@ -199,8 +199,10 @@ export default function LeadsTab({ stats }) {
                 <td>{lead.industryTag && <span className="badge badge-purple">{lead.industryTag}</span>}</td>
                 <td style={{ textAlign: 'center' }}>
                   {lead.linkedinUrl
-                    ? <a href={lead.linkedinUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>View ↗</a>
-                    : <span style={{ color: 'var(--ash)' }}>—</span>}
+                    ? <a href={lead.linkedinUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>LinkedIn ↗</a>
+                    : lead.salesNavUrl
+                      ? <a href={lead.salesNavUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--concrete)' }}>Sales Nav ↗</a>
+                      : <span style={{ color: 'var(--ash)' }}>—</span>}
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <button className={`badge ${lead.contacted ? 'badge-green' : 'badge-gray'}`}

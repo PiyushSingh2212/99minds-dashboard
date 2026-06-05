@@ -135,13 +135,13 @@ function extractLeadsFromPage() {
     ];
 
     salesLinks.forEach((link) => {
-      const profileUrl = link.href?.split('?')[0];
-      if (!profileUrl || seen.has(profileUrl)) return;
+      const salesNavUrl = link.href?.split('?')[0];
+      if (!salesNavUrl || seen.has(salesNavUrl)) return;
       // Skip nav/sidebar links — real result links are inside list items
       const card = link.closest('li') || link.closest('[data-entity-urn]') ||
                    link.closest('[class*="result"]') || link.parentElement;
       if (!card) return;
-      seen.add(profileUrl);
+      seen.add(salesNavUrl);
 
       // Name: prefer a span inside the link, fall back to link text
       let fullName = '';
@@ -152,6 +152,11 @@ function extractLeadsFromPage() {
       }
       if (!fullName) fullName = link.textContent.trim().replace(/\s+/g, ' ').split('\n')[0];
       if (!fullName || fullName.length > 70) return;
+
+      // Actual LinkedIn /in/ URL — present in some card layouts
+      const inLink = card.querySelector('a[href*="linkedin.com/in/"]') ||
+                     card.querySelector('a[href*="/in/"]');
+      const linkedinUrl = inLink?.href?.split('?')[0] || '';
 
       let jobTitle = '', company = '', location = '';
       const texts = [...card.querySelectorAll('span, dd, p')]
@@ -172,7 +177,7 @@ function extractLeadsFromPage() {
       leads.push({
         firstName: parts[0] || '', lastName: parts.slice(1).join(' ') || '',
         fullName, currentJob: jobTitle, companyName: company, location,
-        linkedinUrl: profileUrl, source: 'sales-navigator',
+        linkedinUrl, salesNavUrl, source: 'sales-navigator',
       });
     });
 
