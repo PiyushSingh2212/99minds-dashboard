@@ -130,13 +130,13 @@ router.post('/request-reset', async (req, res) => {
       resetOtpExpiry: new Date(Date.now() + OTP_EXPIRY_MS),
     });
 
-    // Log OTP — visible in Vercel Function Logs / local terminal
-    console.log(`\n╔══════════════════════════════════════╗`);
-    console.log(`║  PASSWORD RESET OTP for ${email}`);
-    console.log(`║  Code: ${otp}   (valid 15 minutes)`);
-    console.log(`╚══════════════════════════════════════╝\n`);
+    console.log(`[RESET OTP] ${email} → ${otp}`);
 
-    res.json({ message: 'If an account exists, a reset code has been generated.' });
+    // Return OTP directly — personal dashboard, single-user, HTTPS-only
+    res.json({
+      message: 'Reset code generated. Copy it below — expires in 15 minutes.',
+      otp,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

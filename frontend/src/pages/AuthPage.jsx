@@ -9,17 +9,18 @@ import { login, signup, requestReset, resetPassword } from '../lib/api';
     'reset-otp'    → enter OTP + new password
 */
 export default function AuthPage({ onAuth }) {
-  const [step, setStep]       = useState('choice');
-  const [mode, setMode]       = useState('login');
-  const [name, setName]       = useState('');
-  const [email, setEmail]     = useState('');
-  const [pass, setPass]       = useState('');
-  const [otp, setOtp]         = useState('');
-  const [newPass, setNewPass] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [error, setError]     = useState('');
-  const [success, setSuccess] = useState('');
-  const [busy, setBusy]       = useState(false);
+  const [step, setStep]         = useState('choice');
+  const [mode, setMode]         = useState('login');
+  const [name, setName]         = useState('');
+  const [email, setEmail]       = useState('');
+  const [pass, setPass]         = useState('');
+  const [otp, setOtp]           = useState('');
+  const [revealedOtp, setRevealedOtp] = useState(''); // OTP shown to user
+  const [newPass, setNewPass]   = useState('');
+  const [confirm, setConfirm]   = useState('');
+  const [error, setError]       = useState('');
+  const [success, setSuccess]   = useState('');
+  const [busy, setBusy]         = useState(false);
 
   const clearMsgs = () => { setError(''); setSuccess(''); };
 
@@ -53,9 +54,12 @@ export default function AuthPage({ onAuth }) {
     clearMsgs();
     setBusy(true);
     try {
-      await requestReset(email);
-      setSuccess('Reset code generated. Check your Vercel Function Logs or local terminal.');
-      setTimeout(() => { clearMsgs(); setStep('reset-otp'); }, 2000);
+      const data = await requestReset(email);
+      if (data.otp) {
+        setRevealedOtp(data.otp);
+        setOtp(data.otp);          // auto-fill the OTP field
+      }
+      setStep('reset-otp');
     } catch (err) { handleErr(err); }
     finally { setBusy(false); }
   };
@@ -93,7 +97,7 @@ export default function AuthPage({ onAuth }) {
       ? 'Enter your email and password to access your dashboard.'
       : 'Set up your 99minds dashboard account.',
     'reset-email': 'Enter your email address and we\'ll generate a reset code in the server logs.',
-    'reset-otp':   'Enter the 6-digit code from your server logs, then choose a new password.',
+    'reset-otp':   'Your reset code is shown below. Enter your new password to continue.',
   };
 
   return (
@@ -154,6 +158,13 @@ export default function AuthPage({ onAuth }) {
           {/* ── Enter OTP + new password ── */}
           {step === 'reset-otp' && (
             <form onSubmit={submitResetOtp} style={s.form}>
+              {revealedOtp && (
+                <div style={s.otpBox}>
+                  <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.06em', marginBottom: 6, opacity: .7 }}>YOUR RESET CODE</div>
+                  <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: '0.25em', color: '#0a0a0a' }}>{revealedOtp}</div>
+                  <div style={{ fontSize: 11, opacity: .55, marginTop: 4 }}>Valid for 15 minutes — auto-filled below</div>
+                </div>
+              )}
               <input style={{ ...s.input, letterSpacing: '0.3em', textAlign: 'center', fontSize: 20 }}
                 type="text" inputMode="numeric" placeholder="_ _ _ _ _ _"
                 maxLength={6} value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
@@ -281,6 +292,13 @@ const s = {
     fontSize: 12, color: '#166534',
     background: 'rgba(220,252,231,.8)', border: '1px solid rgba(134,239,172,.6)',
     borderRadius: 8, padding: '9px 14px', margin: 0,
+  },
+  otpBox: {
+    background: 'rgba(255,255,255,.85)',
+    border: '1.5px solid rgba(0,0,0,.15)',
+    borderRadius: 12,
+    padding: '16px 20px',
+    textAlign: 'center',
   },
   infoBox: {
     fontSize: 13, color: '#1e3a5f',
