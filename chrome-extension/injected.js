@@ -46,12 +46,16 @@
     for (const el of elements) {
       if (!el || (!el.firstName && !el.fullName)) continue;
       const pos  = el.currentPositions?.[0] || {};
-      // publicIdentifier may be top-level or nested in various places
+      // publicIdentifier may be top-level or nested; flagshipProfileUrl is a direct /in/ URL
       const slug = el.publicIdentifier
         || el.memberIdentity?.publicIdentifier
         || el.profileIdentifier
-        || el.linkedInMemberUrn?.match(/urn:li:member:([^,)]+)/)?.[1]
         || '';
+      const flagshipUrl = (el.flagshipProfileUrl || el.memberProfileUrl || el.linkedInProfileUrl || '').split('?')[0];
+      const slugFromUrl = flagshipUrl.match(/linkedin\.com\/in\/([^/?#]+)/)?.[1] || '';
+      const linkedinUrl = slug
+        ? `https://www.linkedin.com/in/${slug}`
+        : (slugFromUrl ? `https://www.linkedin.com/in/${slugFromUrl}` : flagshipUrl);
       // Company logo sometimes nested inside position resolution result
       const coLogo = extractPic(pos.companyUrnResolutionResult?.logo || pos.logo);
       leads.push({
@@ -63,7 +67,7 @@
         location:         el.geoRegion        || '',
         headline:         el.headline         || '',
         summary:          el.summary          || '',
-        linkedinUrl:      slug ? `https://www.linkedin.com/in/${slug}` : '',
+        linkedinUrl,
         salesNavUrl:      urnToSalesNavUrl(el.entityUrn || ''),
         profilePicture:   extractPic(el.profilePictureDisplayImage),
         companyLogo:      coLogo,
@@ -150,10 +154,15 @@
   function processResponse(url, data) {
     try {
       let leads = [];
-      // Sales Nav responses have a top-level `elements` array with firstName fields
       const elements = data?.elements || data?.data?.elements || [];
       if (Array.isArray(elements) && elements.length > 0 &&
           (elements[0]?.firstName !== undefined || elements[0]?.entityUrn?.includes('salesProfile'))) {
+        // Debug: log first element keys so we can see which URL field is present
+        const e0 = elements[0];
+        const urlFields = ['publicIdentifier','flagshipProfileUrl','memberProfileUrl','linkedInProfileUrl','profileIdentifier']
+          .filter(k => e0[k]);
+        if (urlFields.length) console.log('[LV] URL fields in API response:', urlFields.map(k => `${k}=${e0[k]}`));
+        else console.warn('[LV] No LinkedIn URL field found in element. Keys:', Object.keys(e0).join(', '));
         leads = extractSalesNavLeads(elements);
       } else {
         leads = extractVoyagerLeads(data);
